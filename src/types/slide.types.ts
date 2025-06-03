@@ -19,6 +19,9 @@ export interface TextElement extends SlideElement {
   italic?: boolean;
   underline?: boolean;
   align?: 'left' | 'center' | 'right';
+  bulletPoints?: boolean;
+  bulletStyle?: 'disc' | 'circle' | 'square' | 'number' | 'letter';
+  lineHeight?: number;
 }
 
 export interface ImageElement extends SlideElement {

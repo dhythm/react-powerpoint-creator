@@ -4,6 +4,8 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 import ImageIcon from '@mui/icons-material/Image';
 import RectangleIcon from '@mui/icons-material/Rectangle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { FormatToolbar } from '../Toolbar/FormatToolbar';
+import { BulletTextRenderer } from './BulletTextRenderer';
 import type { Slide, TextElement, SlideElementTypes } from '../../types/slide.types';
 
 interface SlideEditorProps {
@@ -25,11 +27,11 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, onSlideUpdate }
     const newTextElement: TextElement = {
       id: String(Date.now()),
       type: 'text',
-      content: 'テキストを入力',
+      content: '項目1\n項目2\n項目3',
       x: 100,
       y: 100,
-      width: 200,
-      height: 50,
+      width: 300,
+      height: 100,
       zIndex: slide.elements.length,
       fontSize: 24,
       fontFamily: 'Arial',
@@ -267,8 +269,19 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, onSlideUpdate }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedElementId, slide]);
 
+  const selectedElement = selectedElementId 
+    ? slide.elements.find(el => el.id === selectedElementId) as TextElement | undefined
+    : null;
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5', p: 2 }}>
+      {selectedElement?.type === 'text' && (
+        <FormatToolbar
+          selectedElement={selectedElement}
+          onElementUpdate={(updates) => handleElementUpdate(selectedElementId!, updates)}
+        />
+      )}
+      
       <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="テキストを追加">
@@ -350,36 +363,19 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, onSlideUpdate }
               }}
             >
               {element.type === 'text' && (
-                <Box
-                  contentEditable={editingElementId === element.id}
-                  suppressContentEditableWarning
+                <BulletTextRenderer
+                  element={element}
+                  isEditing={editingElementId === element.id}
+                  onBlur={(content) => {
+                    handleElementUpdate(element.id, { content });
+                    setEditingElementId(null);
+                  }}
                   onMouseDown={(e) => {
                     if (editingElementId === element.id) {
                       e.stopPropagation();
                     }
                   }}
-                  onBlur={(e) => {
-                    handleElementUpdate(element.id, { content: e.currentTarget.textContent || '' });
-                    setEditingElementId(null);
-                  }}
-                  sx={{
-                    fontSize: element.fontSize,
-                    fontFamily: element.fontFamily,
-                    color: element.fontColor,
-                    fontWeight: element.bold ? 'bold' : 'normal',
-                    fontStyle: element.italic ? 'italic' : 'normal',
-                    textDecoration: element.underline ? 'underline' : 'none',
-                    textAlign: element.align || 'left',
-                    height: '100%',
-                    width: '100%',
-                    outline: editingElementId === element.id ? '2px solid #1976d2' : 'none',
-                    cursor: editingElementId === element.id ? 'text' : 'inherit',
-                    userSelect: editingElementId === element.id ? 'text' : 'none',
-                    pointerEvents: editingElementId === element.id ? 'auto' : 'none',
-                  }}
-                >
-                  {element.content}
-                </Box>
+                />
               )}
               {element.type === 'image' && (
                 <img

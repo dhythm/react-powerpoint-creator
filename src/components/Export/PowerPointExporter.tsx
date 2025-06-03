@@ -63,9 +63,30 @@ export const PowerPointExporter: React.FC<PowerPointExporterProps> = ({
               underline: element.underline || false,
               align: element.align || 'left',
               valign: 'top',
+              lineSpacing: element.lineHeight ? element.lineHeight * element.fontSize : undefined,
             };
 
-            pptxSlide.addText(element.content, options);
+            if (element.bulletPoints) {
+              // 箇条書きの場合
+              const bulletOptions = {
+                ...options,
+                bullet: true,
+                bulletType: element.bulletStyle === 'number' ? 'number' : 'bullet',
+              };
+              
+              // 改行で分割してテキスト配列を作成
+              const textObjs = element.content.split('\n').map(line => ({
+                text: line.trim() || ' ', // 空行の場合はスペースを入れる
+                options: {
+                  bullet: line.trim() !== '' // 空行では箇条書きマークを表示しない
+                }
+              }));
+              
+              pptxSlide.addText(textObjs, bulletOptions);
+            } else {
+              // 通常のテキスト
+              pptxSlide.addText(element.content, options);
+            }
           } else if (element.type === 'image') {
             pptxSlide.addImage({
               data: element.src,
